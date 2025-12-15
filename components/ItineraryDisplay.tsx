@@ -4,9 +4,10 @@ import { Calendar, Clock, MapPin, CheckCircle, AlertCircle, Mail, Copy, RefreshC
 
 interface ItineraryDisplayProps {
   data: ResaResponse;
+  agentEmail?: string;
 }
 
-export const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ data }) => {
+export const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ data, agentEmail }) => {
   const { itinerary, appointmentRequestEmails, updatedItineraryEmail, tourSummaryEmail } = data;
 
   const copyToClipboard = (text: string) => {
@@ -14,11 +15,12 @@ export const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ data }) => {
     // Could add toast notification here
   };
 
-  const handleMailTo = (to: string | null, subject: string | null, body: string | null) => {
+  const handleMailTo = (to: string | null, subject: string | null, body: string | null, cc: string | null = null) => {
       const recipient = to || '';
       const subj = encodeURIComponent(subject || '');
       const bdy = encodeURIComponent(body || '');
-      window.location.href = `mailto:${recipient}?subject=${subj}&body=${bdy}`;
+      const ccParam = cc ? `&cc=${encodeURIComponent(cc)}` : '';
+      window.location.href = `mailto:${recipient}?subject=${subj}&body=${bdy}${ccParam}`;
   };
 
   return (
@@ -106,7 +108,7 @@ export const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Client Tour Summary Email Section (New) */}
+      {/* Client Tour Summary Email Section */}
       {tourSummaryEmail && (
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -121,14 +123,14 @@ export const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ data }) => {
                    </div>
                    <div className="flex gap-2">
                        <button 
-                        onClick={() => handleMailTo(tourSummaryEmail.to, tourSummaryEmail.subject, tourSummaryEmail.body)}
-                        className="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-full hover:bg-white transition-colors border border-transparent hover:border-indigo-100"
+                        onClick={() => handleMailTo(tourSummaryEmail.to, tourSummaryEmail.subject, tourSummaryEmail.body, agentEmail)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1 px-4 py-2 rounded-full transition-colors shadow-sm"
                        >
-                         <Mail size={14} /> Open Mail App
+                         <Mail size={14} /> Send to Client & Agent
                        </button>
                        <button 
-                        onClick={() => copyToClipboard(`To: ${tourSummaryEmail.to}\nSubject: ${tourSummaryEmail.subject}\n\n${tourSummaryEmail.body}`)}
-                        className="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-full hover:bg-white transition-colors border border-transparent hover:border-indigo-100"
+                        onClick={() => copyToClipboard(`To: ${tourSummaryEmail.to}\nCc: ${agentEmail || ''}\nSubject: ${tourSummaryEmail.subject}\n\n${tourSummaryEmail.body}`)}
+                        className="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex items-center gap-1 px-3 py-2 rounded-full hover:bg-white transition-colors border border-transparent hover:border-indigo-100"
                        >
                          <Copy size={14} /> Copy
                        </button>
@@ -138,6 +140,12 @@ export const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ data }) => {
                   <div className="grid grid-cols-[3rem_1fr] gap-2 text-sm">
                     <span className="text-slate-400 font-medium text-right">To:</span>
                     <span className="text-slate-800 select-all">{tourSummaryEmail.to || '(No Client Email Provided)'}</span>
+                    {agentEmail && (
+                        <>
+                            <span className="text-slate-400 font-medium text-right">Cc:</span>
+                            <span className="text-slate-800 select-all">{agentEmail} (You)</span>
+                        </>
+                    )}
                     <span className="text-slate-400 font-medium text-right">Subj:</span>
                     <span className="text-slate-800 font-medium select-all">{tourSummaryEmail.subject}</span>
                   </div>
@@ -164,12 +172,20 @@ export const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ data }) => {
                       <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">For Agent/Client</span>
                       <span className="text-sm font-semibold text-slate-800 truncate max-w-md">{updatedItineraryEmail.subject}</span>
                    </div>
-                   <button 
-                    onClick={() => copyToClipboard(`To: ${updatedItineraryEmail.to}\nSubject: ${updatedItineraryEmail.subject}\n\n${updatedItineraryEmail.body}`)}
-                    className="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-full hover:bg-white transition-colors"
-                   >
-                     <Copy size={14} /> Copy
-                   </button>
+                   <div className="flex gap-2">
+                    <button 
+                        onClick={() => handleMailTo(updatedItineraryEmail.to, updatedItineraryEmail.subject, updatedItineraryEmail.body, updatedItineraryEmail.cc)}
+                        className="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-full hover:bg-white transition-colors"
+                    >
+                        <Mail size={14} /> Mail App
+                    </button>
+                    <button 
+                        onClick={() => copyToClipboard(`To: ${updatedItineraryEmail.to}\nSubject: ${updatedItineraryEmail.subject}\n\n${updatedItineraryEmail.body}`)}
+                        className="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-full hover:bg-white transition-colors"
+                    >
+                        <Copy size={14} /> Copy
+                    </button>
+                   </div>
                 </div>
                 <div className="p-4 space-y-2">
                   <div className="grid grid-cols-[3rem_1fr] gap-2 text-sm">
@@ -205,7 +221,7 @@ export const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ data }) => {
                    </div>
                    <div className="flex gap-2">
                         <button 
-                            onClick={() => handleMailTo(email.to, email.subject, email.body)}
+                            onClick={() => handleMailTo(email.to, email.subject, email.body, email.cc)}
                             className="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-full hover:bg-white transition-colors"
                         >
                             <Mail size={14} /> Mail App

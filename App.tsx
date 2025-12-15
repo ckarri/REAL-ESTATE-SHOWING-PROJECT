@@ -317,7 +317,7 @@ function App() {
             </div>
           </div>
         ) : (
-          result && <ItineraryDisplay data={result} />
+          result && <ItineraryDisplay data={result} agentEmail={agentInfo.email} />
         )}
       </main>
     </div>
